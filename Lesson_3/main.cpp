@@ -51,13 +51,13 @@ pos getAction(pos player) {
     return player;
 }
 
-void drawPyramid(int size) {
-    for (int i=0; i < size; i++)
+void drawPyramid(int size) {      // 2
+    for (int i=0; i < size; i++)  // 2*
         cout << "*";
     cout << endl;
     if (size > 1)
-        drawPyramid(size-1);
-    for (int i=0; i < size; i++)
+        drawPyramid(size-1);      //
+    for (int i=0; i < size; i++)  // 2*
         cout << "*";
     cout << endl;
 }
