@@ -53,10 +53,61 @@ private:
     int m_year;
 };
 
+class Parent {
+public:
+    int m_public = 1;
+protected:
+    int m_protected = 1;
+private:
+    int m_private = 1;
+};
+
+class PublicChild : public Parent {
+public:
+    PublicChild() {
+        m_public = 1;
+        m_protected = 1;
+        //m_private = 1;
+    }
+};
+
+class PrivateChild : private Parent {
+public:
+    PrivateChild() {
+        m_public = 1;
+        m_protected = 1;
+        //m_private = 1;
+    }
+};
+
+class ProtectedChild : protected Parent {
+public:
+    ProtectedChild() {
+        m_public = 1;
+        m_protected = 1;
+        //m_private = 1;
+    }
+};
+
 int main()
 {
     date today(64,6,2024);
     cout << "Today is " << today.getDay() << endl;
     today.showDate();
+
+    PublicChild test1;
+    test1.m_public = 1;
+    //test1.m_protected = 1;
+    //test1.m_private = 1;
+
+    PrivateChild test2;
+    //test2.m_public = 1;
+    //test2.m_protected = 1;
+    //test2.m_private = 1;
+
+    ProtectedChild test3;
+    //test3.m_public = 1;
+    //test3.m_protected = 1;
+    //test3.m_private = 1;
     return 0;
 }
