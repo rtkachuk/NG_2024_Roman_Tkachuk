@@ -3,57 +3,57 @@
 Manager::Manager(QObject *parent)
     : QObject{parent}
 {
-    m_timer = new QTimer();
-    m_timer->setInterval(1000);
-    m_timer->start();
-
-    connect (m_timer, &QTimer::timeout, this, &Manager::tick);
-
 }
 
-void Manager::newTask(int workerAmount, int min, int max)
+void Manager::initJobs(int workerAmount, int min, int max)
 {
     int taskPerWorker = (max - min) / workerAmount;
     for (int workerNumber = 0; workerNumber < workerAmount; workerNumber++) {
         Worker *worker = new Worker();
         worker->setMin(min + (taskPerWorker * workerNumber));
         worker->setMax(min + (taskPerWorker * (workerNumber + 1)));
-        worker->setTimeout(200 * (workerNumber + 1));
+        worker->setTimeout(50 * (workerNumber + 1));
         worker->setId(QString::number(workerNumber));
 
-        m_workerGroup[workerNumber] = worker;
+        m_workerGroup.push_back(worker);
+
+        connect (worker, &QThread::finished, this, &Manager::threadFinished);
+        connect (worker, &Worker::progress, this, &Manager::threadProgress);
     }
 }
 
-void Manager::start()
+void Manager::start(int workerAmount, int min, int max)
 {
-    if (getActiveThreads() > 0) {
+    if (m_workerGroup.size() > 0) {
         qDebug() << "Already started! Wait for completion";
         return;
     }
 
+    initJobs(workerAmount, min, max);
 
-    for (int number : m_workerGroup.keys()) {
-        m_workerGroup[number]->start();
-        qDebug() << "[Manager]: Worker " << number << " started!";
+    for (Worker *worker : m_workerGroup) {
+        worker->start();
+        qDebug() << "[Manager]: Worker " << worker->getId() << " started!";
     }
 
-    emit threadsOnline(m_workerGroup.keys().count());
+    emit threadsOnline(m_workerGroup.size());
 }
 
-void Manager::tick()
+void Manager::threadFinished()
 {
-    qDebug() << "[Manager]: tock";
-    emit threadsOnline(getActiveThreads());
+    Worker *worker = (Worker *)sender();
+
+    m_workerGroup.removeAll(worker);
+    delete worker;
+
+    emit threadsOnline(m_workerGroup.size());
 }
 
-int Manager::getActiveThreads()
+void Manager::threadProgress(int progress)
 {
-    int runningThreads = 0;
-    for (int number : m_workerGroup.keys()) {
-        if (m_workerGroup[number]->isRunning()) {
-            runningThreads++;
-        }
-    }
-    return runningThreads;
+    Worker *worker = (Worker *)sender();
+    qDebug() << "[Progress] " << worker->getId() << ": " << progress << "%";
+
+    QPair <QString, int> workerData(worker->getId(), progress);
+    emit workerProgress(workerData);
 }

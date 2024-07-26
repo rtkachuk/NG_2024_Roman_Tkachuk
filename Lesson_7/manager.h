@@ -2,7 +2,7 @@
 #define MANAGER_H
 
 #include <QObject>
-#include <QTimer>
+#include <QPair>
 #include "worker.h"
 
 class Manager : public QObject
@@ -10,22 +10,22 @@ class Manager : public QObject
     Q_OBJECT
 public:
     explicit Manager(QObject *parent = nullptr);
-    void newTask(int workerAmount, int min, int max);
 
 public slots:
-    void start();
+    void start(int workerAmount, int min, int max);
 
 private slots:
-    void tick();
+    void threadFinished();
+    void threadProgress(int progress);
 
 signals:
     void threadsOnline(int amount);
+    void workerProgress(QPair<QString, int>);
 
 private:
-    int getActiveThreads();
+    void initJobs(int workerAmount, int min, int max);
 
-    QMap<int, Worker*> m_workerGroup;
-    QTimer *m_timer;
+    QVector<Worker*> m_workerGroup;
 };
 
 #endif // MANAGER_H
